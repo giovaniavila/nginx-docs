@@ -49,6 +49,11 @@ sudo systemctl restart nginx
 
 ## 3. Configuração da sua máquina servidor que irá receber a requisição
 
+1) Conecte à sua máquina servidor
+2) instale o nginx na sua máquina servidor
+3) crie um arquivo html: ``` echo '<html><body><h1>Redirecionado pelo Nginx!</h1><p>Você foi redirecionado para a Máquina 3.</p></body></html>' | sudo tee /var/www/html/index.html ```
+4) Entre no arquivo de configuração do Nginx (igual ao passo 2) em ```/etc/nginx/sites-available/default```
+5) Faça a seguinte configuração abaixo:
 ```
 server {
     listen 80;
@@ -75,7 +80,7 @@ Antes de reiniciar o Nginx, verifique se a configuração está correta:
 sudo nginx -t
 ```
 
-## 5.  Configurar o Security Group (AWS)
+## 5.  Configurações adicionais caso não tenha feito (Security Group) (AWS)
 
 Verifique se a porta ```80``` (HTTP) ou ```443``` (HTTPS) está aberta no Security Group da sua instância EC2.
 
@@ -87,3 +92,12 @@ Verifique se a porta ```80``` (HTTP) ou ```443``` (HTTPS) está aberta no Securi
 - <strong>Protocolo:</strong> TCP
 - <strong>Porta:</strong> 80
 - <strong>Fonte/origem:</strong>  0.0.0.0/0 (para permitir de qualquer IP)
+
+## 6. Agora você pode testar através de url http com o ip da sua máquina Nginx
+Acesse pela Url do seu navegador
+
+```
+http://<ip da sua máquina em que está configurado o Nginx>
+```
+
+- Com essa configurações deverá redirecionar para sua máquina servidor ao acessar o IP da máquina Nginx
