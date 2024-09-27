@@ -30,7 +30,7 @@ server {
     server_name <O IP publico da sua máquina em que está configurado o nginx>;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;  # O Ip público máquina que você pretende redirecionar
+        proxy_pass http://127.0.0.1;  # O Ip público máquina que você pretende redirecionar
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -39,8 +39,8 @@ server {
 }
 ```
 
-- altere ```your_domain_or_public_ip```  para o domínio que deseja usar ou o IP público da instância.
-- O ```proxy_pass```  está redirecionando as requisições para o serviço local rodando na porta ```3000```
+- altere ```server_name```  para o domínio que deseja usar ou o IP público da instância em que está o Nginx.
+- O ```proxy_pass```  está redirecionando as requisições para ```http://127.0.0.1```
 
   Reinicie o Nginx para aplicar as mudanças:
 ```
