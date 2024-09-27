@@ -1,4 +1,4 @@
-# nginx-docs
+# Nginx-docs
 
 # Configurar Proxy Reverso com Nginx na AWS
 
@@ -29,10 +29,10 @@ Adicione ou modifique o seguinte bloco de configuração (substitua conforme nec
 
 server {
     listen 80;
-    server_name your_domain_or_public_ip;
+    server_name <O IP publico da sua máquina em que está configurado o nginx>;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;  # O serviço rodando na sua máquina
+        proxy_pass http://127.0.0.1:3000;  # O Ip público máquina que você pretende redirecionar
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -44,12 +44,24 @@ server {
 - altere ```your_domain_or_public_ip```  para o domínio que deseja usar ou o IP público da instância.
 - O ```proxy_pass```  está redirecionando as requisições para o serviço local rodando na porta ```3000```
 
-## 3. Testar a configuração do nginx
+  Reinicie o Nginx para aplicar as mudanças:
+```
+sudo systemctl restart nginx
+```
 
-Antes de reiniciar o Nginx, verifique se a configuração está correta:
+## 3. Configuração da sua máquina servidor que irá receber a requisição
 
 ```
-sudo nginx -t
+server {
+    listen 80;
+    server_name <IP_DA_MAQUINA_Servidor>;  # Substitua pelo IP da Máquina servidor
+
+    location / {
+        root /var/www/html;
+        index index.html;
+    }
+}
+
 ```
 
 Reinicie o Nginx para aplicar as mudanças:
@@ -57,7 +69,15 @@ Reinicie o Nginx para aplicar as mudanças:
 sudo systemctl restart nginx
 ```
 
-## 4.  Configurar o Security Group (AWS)
+## 4. Testar a configuração do nginx
+
+Antes de reiniciar o Nginx, verifique se a configuração está correta:
+
+```
+sudo nginx -t
+```
+
+## 5.  Configurar o Security Group (AWS)
 
 Verifique se a porta ```80``` (HTTP) ou ```443``` (HTTPS) está aberta no Security Group da sua instância EC2.
 
