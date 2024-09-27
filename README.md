@@ -1,5 +1,3 @@
-# Nginx-docs
-
 # Configurar Proxy Reverso com Nginx na AWS
 
 ## 1. Instalar o Nginx
