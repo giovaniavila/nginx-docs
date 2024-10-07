@@ -50,7 +50,14 @@ docker build -t servidor2 ./servidor2
 docker build -t servidor3 ./servidor3
 ```
 
-## 4) Na máquina nginx:
+## 4) Rode os containers
+```
+docker run -d --name servidor1 -p 8080:80 servidor1
+docker run -d --name servidor2 -p 8081:80 servidor2
+docker run -d --name servidor3 -p 8082:80 servidor3
+```
+
+## 5) Na máquina nginx:
 - Altere a configuração de balanceamento em conf.d
   ```
   upstream servidorgiovani {
@@ -70,7 +77,7 @@ docker build -t servidor3 ./servidor3
   ```
   Reinicie o nginx ```sudo systemctl reload nginx```
 
-## 5) Libere as portas necessárias no grupo de segurança:
+## 6) Libere as portas necessárias no grupo de segurança:
 Para garantir que o tráfego seja permitido nas portas ```8080```, ```8081```, ```8082``` e ```8083```, adicione regras de entrada no AWS Security Group associado à sua instância EC2:
 
 1) No console da AWS, vá para a página da sua instância EC2.
