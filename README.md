@@ -1,4 +1,4 @@
-# Configurar Proxy Reverso com Nginx na AWS
+# Configurar Proxy Reverso e Load Balance com Nginx na AWS
 
 ## 1. Instalar o Nginx
 
@@ -14,90 +14,119 @@ verificar se o nginx está rodando na sua máquina
 sudo systemctl status nginx 
 ```
 
-## 2. Configurar o proxy reverso
-
-Edite o arquivo de configuração do nginx em ```/etc/nginx/sites-available/defaul```:
-```
-sudo vim /etc/nginx/sites-available/default
-```
-
-Adicione ou modifique o seguinte bloco de configuração (substitua conforme necessário):
+## 2.  Configurar Hosts Virtuais
+entre no arquivo ```cd /etc/nginx/sites-available/default``` e adicione os servidores.
 
 ```
-
+# Default server configuration
+#
 server {
-    listen 80;
-    server_name <O IP publico da sua máquina em que está configurado o nginx>;
+        listen 80;
+        listen [::]:80;
 
-    location / {
-        proxy_pass http://127.0.0.1;  # O Ip público máquina que você pretende redirecionar
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-- altere ```server_name```  para o domínio que deseja usar ou o IP público da instância em que está o Nginx.
-- O ```proxy_pass```  está redirecionando as requisições para ```http://127.0.0.1```
-
-  Reinicie o Nginx para aplicar as mudanças:
-```
-sudo systemctl restart nginx
-```
-
-## 3. Configuração da sua máquina servidor que irá receber a requisição
-
-1) Conecte à sua máquina servidor
-2) instale o nginx na sua máquina servidor
-3) crie um arquivo html: ``` echo '<html><body><h1>Redirecionado pelo Nginx!</h1><p>Você foi redirecionado para a Máquina 3.</p></body></html>' | sudo tee /var/www/html/index.html ```
-4) Entre no arquivo de configuração do Nginx (igual ao passo 2) em ```/etc/nginx/sites-available/default```
-5) Faça a seguinte configuração abaixo:
-```
-server {
-    listen 80;
-    server_name <IP_DA_MAQUINA_Servidor>;  # Substitua pelo IP da Máquina servidor
-
-    location / {
         root /var/www/html;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+
+# Virtual Host configuration for example.com
+#
+# You can move that to a different file under sites-available/ and symlink that
+# to sites-enabled/ to enable it.
+#
+server {
+        listen 8080;
+        listen [::]:80;
+
+        server_name servidor1;
+
+        root /var/www/servidor1;
         index index.html;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+server {
+        listen 8081;
+        server_name servidor2;
+
+        root /var/www/servidor2;
+        index index.html;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+```
+
+## 3. Navegue até o Diretório de Configuração do NGINX
+```
+cd /etc/nginx/conf.d/
+```
+
+## 4. Criar o Arquivo de Configuração do Balanceador de Carga
+
+```
+sudo vim /etc/nginx/conf.d/load-balancer.conf
+```
+
+## 5. Adicione o Seguinte Conteúdo ao Arquivo
+
+```
+# load-balancer.conf
+
+upstream servidorgiovani {
+    server localhost:servidor1;
+    server localhost:servidor2;
+}
+
+server {
+    listen 8082;
+    server_name load;
+
+    location / {
+        proxy_pass http://servidorgiovani; # proxy reverso
+    }
+
+    error_page 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
     }
 }
 
 ```
 
-Reinicie o Nginx para aplicar as mudanças:
-```
-sudo systemctl restart nginx
-```
+1) Teste a configuração ```sudo nginx -t```
+2) reinicie o nginx ```sudo systemctl reload nginx```
 
-## 4. Testar a configuração do nginx
-
-Antes de reiniciar o Nginx, verifique se a configuração está correta:
-
-```
-sudo nginx -t
-```
-
-## 5.  Configurações adicionais caso não tenha feito (Security Group) (AWS)
-
-Verifique se a porta ```80``` (HTTP) ou ```443``` (HTTPS) está aberta no Security Group da sua instância EC2.
+## 6 Configuração de Porta no AWS Security Group
+Para garantir que o tráfego seja permitido nas portas ```8080```, ```8081``` e ```8082```, adicione regras de entrada no AWS Security Group associado à sua instância EC2:
 
 1) No console da AWS, vá para a página da sua instância EC2.
 2) Encontre o Security Group associado à instância.
 3) Clique em Editar regras de entrada.
-4) Adicione regras para permitir tráfego HTTP ```(80)``` ou HTTPS ```(443)```, como no exemplo abaixo:
+4) Adicione regras para permitir tráfego HTTP ```(8080, 8081,8082)```, como no exemplo abaixo:
 - <strong>Tipo:</strong> HTTP
 - <strong>Protocolo:</strong> TCP
 - <strong>Porta:</strong> 80
 - <strong>Fonte/origem:</strong>  0.0.0.0/0 (para permitir de qualquer IP)
 
-## 6. Agora você pode testar através de url http com o ip da sua máquina Nginx
+## 7. Agora você pode testar através de url http com o ip da sua máquina Nginx
 Acesse pela Url do seu navegador
 
 ```
-http://<ip da sua máquina em que está configurado o Nginx>
+http://<ip da sua máquina em que está configurado o Nginx e o nome da upstream configurada em load-balancer.conf>
 ```
+- exemplo: ```http://<ip publico da sua maquina nginx>:8082```
 
-- Com essa configurações deverá redirecionar para sua máquina servidor ao acessar o IP da máquina Nginx
