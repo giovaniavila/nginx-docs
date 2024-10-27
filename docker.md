@@ -10,56 +10,58 @@ sudo systemctl start docker
 sudo systemctl enable docker
 ```
 
+- Instale o docker compose
+  ``` sudo apt install docker-compose ```
+
 ## 2) Criar o container dos servidores 
-- crie os dockerfiles e os arquivos index.html para cada máquina server
+- crie os arquivos para cada máquina server
   ``` mkdir servidor1 servidor2 servidor3 ```
-  exemplo:
-  
-  ```
-   cd servidor1 vim Dockerfile
-   ```
-  - Conteúdo do dockerfile:
-    ```
-    FROM nginx:alpine
-    COPY ./index.html /usr/share/nginx/html/index.html
-    ```
-  - Crie o arquvo index.html para cada servidor:
-    
-    ```
-    vim index.html
-    ```
-    
-    ```
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Servidor 1</title>
-    </head>
-    <body>
-      <h1>Bem-vindo ao Servidor 1</h1>
-    </body>
-    </html>
-    ```
 
-## 3) Agora crie os comandos de build: 
+- Adicione os arquivos html nos servidores
 ```
-docker build -t servidor1 ./servidor1
-docker build -t servidor2 ./servidor2
-docker build -t servidor3 ./servidor3
+mkdir -p servidor1 servidor2 servidor3 && echo '<html><body><h1>Servidor 1</h1></body></html>' > servidor1/index.html && echo '<html><body><h1>Servidor 2</h1></body></html>' > servidor2/index.html && echo '<html><body><h1>Servidor 3</h1></body></html>' > servidor3/index.html
 ```
 
-## 4) Rode os containers
+- crie o arquivo docker-compose.yml e adicione:
 ```
-docker run -d --name servidor1 -p 8080:80 servidor1
-docker run -d --name servidor2 -p 8081:80 servidor2
-docker run -d --name servidor3 -p 8082:80 servidor3
+  version: '3'
+services:
+  servidor1:
+    build:
+      context: ./servidor1
+    ports:
+      - "8080:80"
+  servidor2:
+    build:
+      context: ./servidor2
+    ports:
+      - "8081:80"
+  servidor3:
+    build:
+      context: ./servidor3
+    ports:
+      - "8082:80"
+```
+
+- Estrutura de como ficou os arquivos <br>
+ubuntu@ip-172-33-81-72:~$ ls <br>
+docker-compose.yml  server1  server2  server3
+
+
+## 3) Executando os containers: 
+- Para executar:
+``` docker-compose up -d ```
+
+- verifique o funcionamento dos servidores
+```
+  curl http://localhost:8080  # Deve retornar "Servidor 1"
+  curl http://localhost:8081  # Deve retornar "Servidor 2"
+  curl http://localhost:8082  # Deve retornar "Servidor 3"
 ```
 
 ## 5) Na máquina nginx:
 - Altere a configuração de balanceamento em conf.d
-  ```
+```
   upstream servidorgiovani {
     server <IP-VM-SERVER>:8080;  # Porta do container Servidor 1
     server <IP-VM-SERVER>:8081;  # Porta do container Servidor 2
@@ -68,14 +70,27 @@ docker run -d --name servidor3 -p 8082:80 servidor3
 
   server {
     listen 8083;
-    server_name load;
+    server_name _;
 
     location / {
         proxy_pass http://servidorgiovani;
+        proxy_cache off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        add_header Cache-Control no-store; #importante para que funcione no reload da página
     }
-  }
-  ```
-  Reinicie o nginx ```sudo systemctl reload nginx```
+
+    error_page 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}
+
+```
+Reinicie o nginx ```sudo systemctl reload nginx```
 
 ## 6) Libere as portas necessárias no grupo de segurança:
 Para garantir que o tráfego seja permitido nas portas ```8080```, ```8081```, ```8082``` e ```8083```, adicione regras de entrada no AWS Security Group associado à sua instância EC2:
