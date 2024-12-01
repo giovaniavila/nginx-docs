@@ -106,7 +106,13 @@ services:
 ```
 
 ## 5 teste a conexão com o banco
-1) Execute o para definir as variaveis de ambiente
+- Em cada container siga os seguintes passos:
+  
+5.1) entre no container:
+   ```
+   docker exec -it server1 /bin/bash
+   ```
+ 5.2) Execute o para definir as variaveis de ambiente
 ```
 export DB_HOST=<endpoint da database>
 export DB_PORT=3306 (para mysql)
@@ -114,13 +120,20 @@ export DB_USER=admin (nome do user que voce definiu)
 export DB_PASSWORD=<senha do seu banco>
 export DB_NAME=<nome do banco que voce criou dentro do host>
 ```
-- Após pressionar enter, você deve ser capaz de entrar no banco de dados.
-
-2) verifique as variáveis, se necessario:
+5.3) verifique as variáveis, se necessario:
 ```
 echo $DB_HOST
 echo $DB_PORT
 echo $DB_USER
 echo $DB_PASSWORD
 echo $DB_NAME
+```
+5.4) o pacote mysql-client não está disponível no repositório padrão do container nginx, iremos usar mariadb para realizar a conexão:
+   ```
+   apt-get update
+   apt-get install mariadb-client
+   ```
+5.5) teste a conexão com o banco a partir do seu container atual:
+```
+mariadb -h $DB_HOST -P $DB_PORT -u $DB_USER -p$DB_PASSWORD $DB_NAME
 ```
