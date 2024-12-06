@@ -1,7 +1,7 @@
 # Topologia do Projeto
 
 <div>
-    <img src="./diagrams/topologia-img.png">
+    <img src="topologia-img.png">
 </div>
 
 
