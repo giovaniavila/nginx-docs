@@ -1,3 +1,10 @@
+# Topologia do Projeto
+
+<div>
+    <img src="./diagrams/topologia-img.png">
+</div>
+
+
 # Configurar Proxy Reverso e Load Balance com Nginx na AWS
 
 ## 1. Instalar o Nginx
@@ -129,4 +136,43 @@ Acesse pela Url do seu navegador
 http://<ip da sua máquina em que está configurado o Nginx e o nome da upstream configurada em load-balancer.conf>
 ```
 - exemplo: ```http://<ip publico da sua maquina nginx>:8082```
+
+## VPN
+
+### instale openvpn em sua ec2 do loadbalancer por meio de um script
+
+```
+wget https://git.io/vpn -O openvpn-install.sh
+
+```
+
+Torne o script executável:
+
+```
+sudo chmod +x openvpn-install.sh
+```
+
+Execute o script para instalar o OpenVPN:
+
+```
+sudo bash openvpn-install.sh
+```
+
+Copie o arquivo de configuração do cliente para o diretório do usuário padrão:
+
+```
+sudo cp /root/client1.ovpn ~
+```
+
+Baixe o arquivo .ovpn para a máquina local:
+
+```
+scp -i /caminho/para/chave.pem ubuntu@<IP-SERVIDOR>:/home/ubuntu/client1.ovpn .
+```
+
+instale o aplicativo da openvpn
+
+ja instalado, coloque a chave que você conseguiu no aplicativo da openvpn e rode
+
+acesse o endereço da vpn no seu navegador
 
