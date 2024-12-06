@@ -69,33 +69,50 @@ INSERT INTO server_data (server_name, data) VALUES
 ```
 version: '3.8'
 
+version: '3'
+
 services:
   server1:
-    image: nginx
+    build: ./project/server1
+    container_name: server1
+    ports:
+      - "8080:8080"
     environment:
-      DB_HOST: <RDS_ENDPOINT>
-      DB_USER: admin
-      DB_PASSWORD: <YOUR_PASSWORD>
-      DB_NAME: project_data
-      SERVER_NAME: server1
+      - DB_HOST=<RDS_ENDPOINT>
+      - DB_PORT=3306
+      - DB_NAME=database-2
+      - DB_USER=admin
+      - DB_PASSWORD: <YOUR_PASSWORD>
+      - SERVER_NAME=server1
+      - PORT=8080
 
   server2:
-    image: nginx
+    build: ./project/server2
+    container_name: server2
+    ports:
+      - "8081:8080"
     environment:
-      DB_HOST: <RDS_ENDPOINT>
-      DB_USER: admin
-      DB_PASSWORD: <YOUR_PASSWORD>
-      DB_NAME: project_data
-      SERVER_NAME: server2
+      - DB_HOST=<RDS_ENDPOINT>
+      - DB_PORT=3306
+      - DB_NAME=database-2
+      - DB_USER=admin
+      - DB_PASSWORD: <YOUR_PASSWORD>
+      - SERVER_NAME=server2
+      - PORT=8081
 
   server3:
-    image: nginx
+    build: ./project/server3
+    container_name: server3
+    ports:
+      - "8082:8080"
     environment:
-      DB_HOST: <RDS_ENDPOINT>
-      DB_USER: admin
-      DB_PASSWORD: <YOUR_PASSWORD>
-      DB_NAME: project_data
-      SERVER_NAME: server3
+      - DB_HOST=<RDS_ENDPOINT>
+      - DB_PORT=3306
+      - DB_NAME=database-2
+      - DB_USER=admin
+      - DB_PASSWORD: <YOUR_PASSWORD>
+      - SERVER_NAME=server3
+      - PORT=8082
 ```
 
 - Substitua <RDS_ENDPOINT> e <YOUR_PASSWORD> pelos valores configurados.
